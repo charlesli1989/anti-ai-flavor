@@ -1,4 +1,4 @@
-﻿# anti-ai-flavor
+# anti-ai-flavor
 
 <!-- languages:start -->
 [English](README.md) · **简体中文**
