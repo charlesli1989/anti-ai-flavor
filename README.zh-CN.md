@@ -1,4 +1,4 @@
-# anti-ai-flavor
+﻿# anti-ai-flavor
 
 <!-- languages:start -->
 [English](README.md) · **简体中文**
@@ -8,13 +8,13 @@
 
 ## 安装
 
-- **GitHub 安装（Covel ≥ 0.0.40）**：设置 → 插件 → 安装与管理，粘贴 `https://github.com/charlesli1989/anti-ai-flavor`，确认风险提示后安装，重启后端。
+- **GitHub 安装**：设置 → 插件 → 安装与管理，粘贴 `https://github.com/charlesli1989/anti-ai-flavor`，确认风险提示后安装，重启后端。
 - **ZIP 导入**：从 [Releases](https://github.com/charlesli1989/anti-ai-flavor/releases) 下载 `anti-ai-flavor.zip`，在同一设置页拖入。
 - **手动**：把本目录复制到 `~/.covel/plugins/anti-ai-flavor`，重启后端。
 
 重启后在会话中启用插件，并按提示批准其服务端代码。
 
-**支持的 Covel 版本**：≥ 0.0.38（GitHub 安装需 ≥ 0.0.40）。
+**支持的 Covel 版本**：≥ 0.0.46。
 
 ## 配置
 

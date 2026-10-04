@@ -1,0 +1,84 @@
+# Chinese text of the anti-ai-flavor plugin.
+# A section named after a manifest file translates its labels, under the same keys.
+PLUGIN.md:
+  displayName: 去 AI 味
+  description: >-
+    给叙事正文注入三类文风约束（避免说明文写法、避免 AI 高频陈词、增强活人感），
+    去除 LLM 的"AI 腔"。纯预防，不做写后检查。
+  contributes:
+    settings:
+      - key: banNegation
+        label: 禁止否定描写
+        description: >-
+          正文只写是什么、发生了什么，不通过"不是什么、没发生什么"来描写。人物对话、
+          成语与固定搭配、内心独白除外；表现"寻求而无果"时可用否定表述，但不允许整段
+          只有否定。仅作用于中文会话。
+      - key: banCorrectiveNegation
+        label: 禁止"不是…而是…"句式
+        description: >-
+          不使用"不是……（而）是……"的先否定再纠正句式，包括把否定与纠正拆进不同句子
+          或段落的变体；直接写是什么。
+      - key: banEmDash
+        label: 禁止破折号
+        description: >-
+          不使用破折号，表示声音拉长时除外；表达解释或转折时改用逗号。
+      - key: banExplanatoryColon
+        label: 禁止解释性冒号
+        description: >-
+          不使用冒号进行解释，引出人物话语的冒号不受此限；需要解释时改用逗号衔接。
+          仅作用于中文会话。
+      - key: banFingerCliche
+        label: 禁止手指陈词
+        description: >-
+          不使用"指节泛白"及类似的手指描写；表现紧张、用力时改用其他身体细节。
+          仅作用于中文会话。
+      - key: banDegreeAdverbs
+        label: 减少程度副词
+        description: >-
+          减少"一丝""一抹""微微""淡淡""难以察觉的""极其"等程度副词与弱化修饰的使用，
+          禁止短时间内连续出现；要写就写出具体的程度、形态或动作。
+      - key: banAccountingMetaphor
+        label: 禁止账簿比喻
+        description: >-
+          不把"记账""算账""账目""这笔账"等账簿词汇用作抽象比喻（情绪、恩怨、因果的"账"）；
+          真实的记账动作与真实存在的账簿不受此限。仅作用于中文会话。
+      - key: banFlatVoice
+        label: 禁止无特点声音描述
+        description: >-
+          不使用"声音很平""声音不大"这类无情绪、无特点的声音描述；写声音要写出质感、
+          情绪或节奏。仅作用于中文会话。
+      - key: banVerbatimEcho
+        label: 禁止照抄复述
+        description: >-
+          人物对话复述前文内容时不逐字照抄原文；同样的意思也要换一种说法。
+          仅作用于中文会话。
+      - key: colloquialDialogue
+        label: 对话口语化
+        description: >-
+          人物说话要口语化，不使用书面语；可以多用语气词和符合人物习惯的口癖。
+          仅作用于中文会话。
+      - key: banThroatClearing
+        label: 禁止清嗓子开场
+        description: >-
+          禁止"Here's the thing:"/"It turns out"/"Let that sink in."等开场铺垫与
+          强调拐杖；直接说重点。仅作用于英文会话。
+      - key: banTriadicLists
+        label: 禁止三件套排比
+        description: >-
+          禁止三件式排比和为制造戏剧性堆叠的碎句（"Speed. Quality. Cost."）；节奏要有变化。
+          仅作用于英文会话。
+      - key: banVagueDeclaratives
+        label: 禁止空洞宣告
+        description: >-
+          禁止只宣布重要性却不点明具体内容的句子（"The stakes are high"/
+          "The reasons are structural"）；写出具体的风险或原因。仅作用于英文会话。
+      - key: banFalseAgency
+        label: 禁止假动作主语
+        description: >-
+          禁止无生命事物执行人类动作（"the decision emerges"/"the data tells us"）；
+          写出具体行动的人。仅作用于英文会话。
+      - key: banBusinessJargon
+        label: 禁止商业黑话
+        description: >-
+          禁止商业黑话（"navigate"/"unpack"/"lean into"/"landscape"/"game-changer"/
+          "double down"/"deep dive"）；用平实的语言。仅作用于英文会话。
