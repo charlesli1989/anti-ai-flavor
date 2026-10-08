@@ -4,7 +4,7 @@
 [English](README.md) · **简体中文**
 <!-- languages:end -->
 
-[Covel](https://github.com/ackness/covel) 社区插件，去除叙事正文的"AI 腔"：向 story runtime 的 system prompt 注入按会话语言选择的文风约束——中文表（说明文腔、AI 高频陈词、活人感）和英文表（公式化结构、AI 高频陈词）。纯预防，不检查生成结果。
+[Covel](https://github.com/ackness/covel) 社区插件，去除叙事正文的"AI 腔"：把按会话语言选择的文风约束作为末尾 system 消息注入每个 agent runtime——story、world-init、各提取器等无一例外——排在记忆块和玩家输入之后，成为模型生成前读到的最后一段指令。中文表（说明文腔、AI 高频陈词、活人感）和英文表（公式化结构、AI 高频陈词）。纯预防，不检查生成结果。直接调用模型网关的 function runtime（记忆提取）不组装 context，hook 无法触达。
 
 ## 安装
 
@@ -24,13 +24,13 @@
 
 - **数据**：不读不写。不访问 plugin-data，不访问 store。
 - **网络**：不发起任何网络请求。
-- **模型成本**：自身不调用 LLM；只向 story runtime 现有的 system prompt 追加一段约 1 KB 的规则文本，每回合一次。
+- **模型成本**：自身不调用 LLM；只向每个 runtime 的消息列表末尾追加一条约 1 KB 的规则消息。
 
 ## 运行时结构
 
 - `PLUGIN.md`：插件清单和 15 个按条目的 `userSettings` 开关声明。
 - `server/index.js`：注册 `PostContextAssembly` hook 的入口。
-- `hooks/inject-style-rules.js`：hook 实现，按 `payload.locale` 分流（zh/en），只改写 `outputKind === "story"` 的 runtime。
+- `hooks/inject-style-rules.js`：hook 实现，按 `payload.locale` 分流（zh/en），向每个组装了 context 的 runtime 追加规则消息。
 - `hooks/_style-rules.js`：中英文两张规则表和注入文本组装，纯文本常量，无运行时状态。
 
 ## 已知限制

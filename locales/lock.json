@@ -20,6 +20,8 @@
       "PLUGIN.md#contributes.settings[key=banFingerCliche].label": "6001d52cd886a552",
       "PLUGIN.md#contributes.settings[key=banFlatVoice].description": "77bc3c04003f38a3",
       "PLUGIN.md#contributes.settings[key=banFlatVoice].label": "db64275c71ba7830",
+      "PLUGIN.md#contributes.settings[key=banGratuitousMetaphor].description": "9e0cb0d72bd1a6f8",
+      "PLUGIN.md#contributes.settings[key=banGratuitousMetaphor].label": "dbc02269a33734d8",
       "PLUGIN.md#contributes.settings[key=banNegation].description": "5319acc3ff1bc9d8",
       "PLUGIN.md#contributes.settings[key=banNegation].label": "8adbf60af85e8472",
       "PLUGIN.md#contributes.settings[key=banThroatClearing].description": "c39366a4c49af1f2",
@@ -32,7 +34,7 @@
       "PLUGIN.md#contributes.settings[key=banVerbatimEcho].label": "f9796eba5b9a1459",
       "PLUGIN.md#contributes.settings[key=colloquialDialogue].description": "b9cd9a26d0a0fa3f",
       "PLUGIN.md#contributes.settings[key=colloquialDialogue].label": "d05d22c129b4f4b3",
-      "PLUGIN.md#description": "0fceb151d965e8c4",
+      "PLUGIN.md#description": "d708b38d625d6312",
       "PLUGIN.md#displayName": "3bcc3b02ccd09b91"
     }
   }

@@ -14,6 +14,7 @@ import {
   RULE_FINGER_CLICHE,
   RULE_DEGREE_ADVERBS,
   RULE_ACCOUNTING_METAPHOR,
+  RULE_GRATUITOUS_METAPHOR,
   RULE_FLAT_VOICE,
   RULE_VERBATIM_ECHO,
   RULE_COLLOQUIAL_SPEECH,
@@ -29,6 +30,7 @@ import {
   RULE_VAGUE_DECLARATIVES_EN,
   RULE_FALSE_AGENCY_EN,
   RULE_BUSINESS_JARGON_EN,
+  RULE_GRATUITOUS_METAPHOR_EN,
 } from "../hooks/_style-rules.js";
 
 const FULL_BLOCK = [
@@ -46,11 +48,12 @@ const FULL_BLOCK = [
   `5. ${RULE_FINGER_CLICHE}`,
   `6. ${RULE_DEGREE_ADVERBS}`,
   `7. ${RULE_ACCOUNTING_METAPHOR}`,
+  `8. ${RULE_GRATUITOUS_METAPHOR}`,
   "",
   CATEGORY_LIVELINESS,
-  `8. ${RULE_FLAT_VOICE}`,
-  `9. ${RULE_VERBATIM_ECHO}`,
-  `10. ${RULE_COLLOQUIAL_SPEECH}`,
+  `9. ${RULE_FLAT_VOICE}`,
+  `10. ${RULE_VERBATIM_ECHO}`,
+  `11. ${RULE_COLLOQUIAL_SPEECH}`,
 ].join("\n");
 
 const FULL_BLOCK_EN = [
@@ -69,6 +72,7 @@ const FULL_BLOCK_EN = [
   `6. ${RULE_VAGUE_DECLARATIVES_EN}`,
   `7. ${RULE_FALSE_AGENCY_EN}`,
   `8. ${RULE_BUSINESS_JARGON_EN}`,
+  `9. ${RULE_GRATUITOUS_METAPHOR_EN}`,
 ].join("\n");
 
 const ALL_OFF = {
@@ -79,6 +83,7 @@ const ALL_OFF = {
   banFingerCliche: false,
   banDegreeAdverbs: false,
   banAccountingMetaphor: false,
+  banGratuitousMetaphor: false,
   banFlatVoice: false,
   banVerbatimEcho: false,
   colloquialDialogue: false,
@@ -119,6 +124,7 @@ describe("anti-ai-flavor / buildStyleRulesText", () => {
       banFingerCliche: false,
       banDegreeAdverbs: false,
       banAccountingMetaphor: false,
+      banGratuitousMetaphor: false,
     });
     expect(text).not.toContain(CATEGORY_AI_CLICHE);
     expect(text).toContain(CATEGORY_EXPOSITORY);
@@ -138,13 +144,17 @@ describe("anti-ai-flavor / buildStyleRulesText", () => {
     expect(noAdverbs).not.toContain(RULE_DEGREE_ADVERBS);
     expect(noAdverbs).toContain(`6. ${RULE_ACCOUNTING_METAPHOR}`);
 
+    const noMetaphor = buildStyleRulesText({ banGratuitousMetaphor: false });
+    expect(noMetaphor).not.toContain(RULE_GRATUITOUS_METAPHOR);
+    expect(noMetaphor).toContain(`8. ${RULE_FLAT_VOICE}`);
+
     const noVoice = buildStyleRulesText({ banFlatVoice: false });
     expect(noVoice).not.toContain(RULE_FLAT_VOICE);
-    expect(noVoice).toContain(`8. ${RULE_VERBATIM_ECHO}`);
+    expect(noVoice).toContain(`9. ${RULE_VERBATIM_ECHO}`);
 
     const noColloquial = buildStyleRulesText({ colloquialDialogue: false });
     expect(noColloquial).not.toContain(RULE_COLLOQUIAL_SPEECH);
-    expect(noColloquial).toContain(`9. ${RULE_VERBATIM_ECHO}`);
+    expect(noColloquial).toContain(`10. ${RULE_VERBATIM_ECHO}`);
   });
 
   it("returns an empty string when every rule is off", () => {
@@ -190,6 +200,7 @@ describe("anti-ai-flavor / buildStyleRulesText (en table)", () => {
         banVagueDeclaratives: false,
         banFalseAgency: false,
         banBusinessJargon: false,
+        banGratuitousMetaphor: false,
       },
       "en",
     );
@@ -199,61 +210,70 @@ describe("anti-ai-flavor / buildStyleRulesText (en table)", () => {
 });
 
 describe("anti-ai-flavor / inject-style-rules (PostContextAssembly)", () => {
-  it("appends the full block to a zh-CN story runtime's system prompt", async () => {
+  const HISTORY = [
+    { role: "system", content: "TURN_CONTEXT_WITH_MEMORY_BLOCKS" },
+    { role: "user", content: "玩家输入" },
+  ];
+  /** The last message of the replacement carries the rules block. */
+  const tail = (r) => r.replace.messages[r.replace.messages.length - 1];
+
+  it("appends the full block as a trailing system message (zh-CN)", async () => {
     const r = await injectStyleRules(ctxWith({}), {
       outputKind: "story",
       systemPrompt: "BASE_SYSTEM_PROMPT",
+      messages: HISTORY,
       locale: "zh-CN",
     });
     expect(r.action).toBe("continue");
-    expect(r.replace.systemPrompt).toBe(
-      "BASE_SYSTEM_PROMPT" + "\n\n" + FULL_BLOCK,
-    );
+    expect(r.replace.systemPrompt).toBeUndefined();
+    expect(r.replace.messages).toEqual([
+      ...HISTORY,
+      { role: "system", content: FULL_BLOCK },
+    ]);
+  });
+
+  it("lands after memory blocks and the player input (tail of messages)", async () => {
+    const r = await injectStyleRules(ctxWith({}), {
+      systemPrompt: "BASE",
+      messages: HISTORY,
+      locale: "zh-CN",
+    });
+    expect(tail(r)).toEqual({ role: "system", content: FULL_BLOCK });
+    expect(r.replace.messages.at(-2)).toEqual(HISTORY.at(-1));
   });
 
   it("injects for zh aliases as well (zh → zh-CN)", async () => {
     const r = await injectStyleRules(ctxWith({}), {
-      outputKind: "story",
       systemPrompt: "BASE",
+      messages: [],
       locale: "zh",
     });
-    expect(r.replace.systemPrompt).toBe("BASE" + "\n\n" + FULL_BLOCK);
+    expect(tail(r).content).toBe(FULL_BLOCK);
   });
 
-  it("preserves the original prompt verbatim as the prefix", async () => {
-    const base = "你是叙事者。\n遵循世界设定。";
+  it("injects the en table for en sessions", async () => {
     const r = await injectStyleRules(ctxWith({}), {
-      outputKind: "story",
-      systemPrompt: base,
-      locale: "zh-CN",
-    });
-    expect(r.replace.systemPrompt.startsWith(base + "\n\n")).toBe(true);
-    expect(r.replace.systemPrompt.endsWith(RULE_COLLOQUIAL_SPEECH)).toBe(true);
-  });
-
-  it("injects the en table for en story sessions", async () => {
-    const r = await injectStyleRules(ctxWith({}), {
-      outputKind: "story",
       systemPrompt: "BASE",
+      messages: HISTORY,
       locale: "en-US",
     });
-    expect(r.replace.systemPrompt).toBe("BASE" + "\n\n" + FULL_BLOCK_EN);
+    expect(tail(r).content).toBe(FULL_BLOCK_EN);
   });
 
   it("matches any en* locale (en → en table)", async () => {
     const r = await injectStyleRules(ctxWith({ banTriadicLists: false }), {
-      outputKind: "story",
       systemPrompt: "BASE",
+      messages: [],
       locale: "en",
     });
-    expect(r.replace.systemPrompt).toContain(RULE_THROAT_CLEARING_EN);
-    expect(r.replace.systemPrompt).not.toContain(RULE_TRIADIC_LISTS_EN);
+    expect(tail(r).content).toContain(RULE_THROAT_CLEARING_EN);
+    expect(tail(r).content).not.toContain(RULE_TRIADIC_LISTS_EN);
   });
 
-  it("leaves non-zh/en story sessions untouched (no matching rule table)", async () => {
+  it("leaves non-zh/en sessions untouched (no matching rule table)", async () => {
     const r = await injectStyleRules(ctxWith({}), {
-      outputKind: "story",
       systemPrompt: "BASE",
+      messages: HISTORY,
       locale: "ru-RU",
     });
     expect(r).toEqual({ action: "continue" });
@@ -261,36 +281,31 @@ describe("anti-ai-flavor / inject-style-rules (PostContextAssembly)", () => {
 
   it("treats a missing locale as non-zh (no injection)", async () => {
     const r = await injectStyleRules(ctxWith({}), {
-      outputKind: "story",
       systemPrompt: "BASE",
+      messages: HISTORY,
     });
     expect(r).toEqual({ action: "continue" });
   });
 
-  it("leaves plugin-kind runtimes untouched (no replace)", async () => {
-    const r = await injectStyleRules(ctxWith({}), {
-      outputKind: "plugin",
-      systemPrompt: "CODEX_PROMPT",
-      locale: "zh-CN",
-    });
-    expect(r).toEqual({ action: "continue" });
-  });
+  it.each(["story", "plugin", "system", undefined])(
+    "injects regardless of outputKind (%s) — locale is the only gate",
+    async (outputKind) => {
+      const r = await injectStyleRules(ctxWith({}), {
+        outputKind,
+        systemPrompt: "PROMPT",
+        messages: [],
+        locale: "zh-CN",
+      });
+      expect(tail(r).content).toBe(FULL_BLOCK);
+    },
+  );
 
-  it("leaves system-kind runtimes untouched (no replace)", async () => {
+  it("survives an absent messages array (injects as the only message)", async () => {
     const r = await injectStyleRules(ctxWith({}), {
-      outputKind: "system",
-      systemPrompt: "SYSTEM_PROMPT",
+      systemPrompt: "BASE",
       locale: "zh-CN",
     });
-    expect(r).toEqual({ action: "continue" });
-  });
-
-  it("treats a missing outputKind as non-story (no replace)", async () => {
-    const r = await injectStyleRules(ctxWith({}), {
-      systemPrompt: "UNKNOWN_PROMPT",
-      locale: "zh-CN",
-    });
-    expect(r).toEqual({ action: "continue" });
+    expect(r.replace.messages).toEqual([{ role: "system", content: FULL_BLOCK }]);
   });
 
   it("does not throw when the payload is absent", async () => {
@@ -300,8 +315,8 @@ describe("anti-ai-flavor / inject-style-rules (PostContextAssembly)", () => {
 
   it("injects nothing when every rule is toggled off", async () => {
     const r = await injectStyleRules(ctxWith(ALL_OFF), {
-      outputKind: "story",
       systemPrompt: "BASE",
+      messages: HISTORY,
       locale: "zh-CN",
     });
     expect(r).toEqual({ action: "continue" });
@@ -310,22 +325,22 @@ describe("anti-ai-flavor / inject-style-rules (PostContextAssembly)", () => {
   it("honours per-session toggles from getOwnSettings", async () => {
     const r = await injectStyleRules(
       ctxWith({ banEmDash: false, banFingerCliche: false }),
-      { outputKind: "story", systemPrompt: "BASE", locale: "zh-CN" },
+      { systemPrompt: "BASE", messages: HISTORY, locale: "zh-CN" },
     );
-    expect(r.replace.systemPrompt).not.toContain(RULE_EM_DASH);
-    expect(r.replace.systemPrompt).not.toContain(RULE_FINGER_CLICHE);
-    expect(r.replace.systemPrompt).toContain(`1. ${RULE_NEGATION}`);
-    expect(r.replace.systemPrompt).toContain(`2. ${RULE_CORRECTIVE_NEGATION}`);
+    expect(tail(r).content).not.toContain(RULE_EM_DASH);
+    expect(tail(r).content).not.toContain(RULE_FINGER_CLICHE);
+    expect(tail(r).content).toContain(`1. ${RULE_NEGATION}`);
+    expect(tail(r).content).toContain(`2. ${RULE_CORRECTIVE_NEGATION}`);
     // With em-dash off, explanatory colon takes number 3.
-    expect(r.replace.systemPrompt).toContain(`3. ${RULE_EXPLANATORY_COLON}`);
+    expect(tail(r).content).toContain(`3. ${RULE_EXPLANATORY_COLON}`);
   });
 
   it("falls back to manifest defaults when getOwnSettings is absent (out of hook scope)", async () => {
     const r = await injectStyleRules(CTX, {
-      outputKind: "story",
       systemPrompt: "BASE",
+      messages: HISTORY,
       locale: "zh-CN",
     });
-    expect(r.replace.systemPrompt).toBe("BASE" + "\n\n" + FULL_BLOCK);
+    expect(tail(r).content).toBe(FULL_BLOCK);
   });
 });

@@ -3,8 +3,8 @@
 PLUGIN.md:
   displayName: 去 AI 味
   description: >-
-    给叙事正文注入三类文风约束（避免说明文写法、避免 AI 高频陈词、增强活人感），
-    去除 LLM 的"AI 腔"。纯预防，不做写后检查。
+    向所有 runtime 的提示词注入三类文风约束（避免说明文写法、避免 AI 高频陈词、
+    增强活人感），去除 LLM 的"AI 腔"。纯预防，不做写后检查。
   contributes:
     settings:
       - key: banNegation
@@ -42,6 +42,12 @@ PLUGIN.md:
         description: >-
           不把"记账""算账""账目""这笔账"等账簿词汇用作抽象比喻（情绪、恩怨、因果的"账"）；
           真实的记账动作与真实存在的账簿不受此限。仅作用于中文会话。
+      - key: banGratuitousMetaphor
+        label: 禁止滥用比喻
+        description: >-
+          比喻的职责是把抽象、难描述的东西比作具象、好理解的东西；本身就好理解、好描述的
+          事物或动作直接写，不画蛇添足地打比方。确需用比喻时，喻体必须是常见事物，不用小众
+          冷僻的东西作比。
       - key: banFlatVoice
         label: 禁止无特点声音描述
         description: >-

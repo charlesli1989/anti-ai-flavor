@@ -24,25 +24,29 @@ function styleLanguage(locale) {
 }
 
 /**
- * PostContextAssembly — append the anti-AI-flavor style rules to the **story**
- * runtime's assembled system prompt, so the main narrative voice gets the
- * constraints a single time per turn (after buildContext, before the agent
- * loop).
+ * PostContextAssembly — inject the anti-AI-flavor style rules into EVERY
+ * runtime's assembled context (after buildContext, before the agent loop).
+ * Coverage is deliberate: world-init and other auxiliary runtimes also write
+ * prose that flows back into the story, so constraining only the story
+ * runtime leaves those upstream sources free to reintroduce the AI accent.
+ * The hook never branches on a plugin id (framework/plugin isolation rule).
  *
- * Story is identified by `payload.outputKind === "story"` — a read-only field
- * the framework threads into the PostContextAssembly payload — never by a
- * hardcoded plugin id (framework/plugin isolation rule). Every non-story
- * runtime (codex / guide / extractors / system) returns a plain `continue`
- * and is left byte-for-byte unchanged.
+ * Placement: the rules go out as a trailing system message appended to
+ * `messages`, NOT merged into the system prompt. Turn-volatile segments
+ * (memory blocks, runtime inputs) and the current player input all sit after
+ * the system prompt; a tail message lands behind them, making the rules the
+ * last instruction the model reads before generating — and it leaves the
+ * system prompt untouched for prefix caching.
  *
  * zh and en sessions only: the zh table targets Chinese prose conventions and
  * the en table targets English AI-slop patterns, so injection is gated on
  * `styleLanguage(payload.locale)` instead of polluting prompts of sessions
  * writing in other languages.
  *
- * Pure rewrite: this hook only appends to the system prompt it is handed. It
- * never reads or writes the store, never emits proposals, and never calls the
- * LLM. Prevention-only by design — generated output is never inspected.
+ * Pure rewrite: this hook only appends one message to the assembled context
+ * it is handed. It never reads or writes the store, never emits proposals,
+ * and never calls the LLM. Prevention-only by design — generated output is
+ * never inspected.
  *
  * `ctx.getOwnSettings()` is injected by the runtime hook pipeline and returns
  * this plugin's resolved per-session settings; it is absent outside an active
@@ -50,17 +54,19 @@ function styleLanguage(locale) {
  * (every rule ON).
  *
  * @param {{ sessionId: string, getOwnSettings?: () => Record<string, unknown> }} ctx
- * @param {{ outputKind?: string, systemPrompt: string, locale?: string }} payload
- * @returns {Promise<{ action: "continue", replace?: { systemPrompt: string } }>}
+ * @param {{ locale?: string, messages?: { role: string, content: unknown }[] }} payload
+ * @returns {Promise<{ action: "continue", replace?: { messages: { role: string, content: string }[] } }>}
  */
 export default async function injectStyleRules(ctx, payload) {
-  if (payload?.outputKind !== "story") return { action: "continue" };
   const lang = styleLanguage(payload?.locale);
   if (!lang) return { action: "continue" };
   const rulesText = buildStyleRulesText(ctx?.getOwnSettings?.(), lang);
   if (!rulesText) return { action: "continue" };
+  const messages = Array.isArray(payload?.messages) ? payload.messages : [];
   return {
     action: "continue",
-    replace: { systemPrompt: payload.systemPrompt + "\n\n" + rulesText },
+    replace: {
+      messages: [...messages, { role: "system", content: rulesText }],
+    },
   };
 }

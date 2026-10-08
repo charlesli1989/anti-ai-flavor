@@ -1,8 +1,8 @@
 /**
- * Style-rule text appended to the story runtime's assembled system prompt by
- * ./inject-style-rules.js. Plain frozen text constants — no runtime state,
- * no I/O. Kept in its own module so the handler and tests share one source
- * of truth.
+ * Style-rule text sent as a trailing system message of every runtime's
+ * assembled context by ./inject-style-rules.js. Plain frozen text constants —
+ * no runtime state, no I/O. Kept in its own module so the handler and tests
+ * share one source of truth.
  *
  * Two rule tables: zh (Chinese prose conventions — 破折号 / 解释性冒号 /
  * 指节泛白 / 账簿比喻) and en (English AI-slop patterns — throat-clearing /
@@ -66,6 +66,10 @@ export const RULE_DEGREE_ADVERBS =
 /** @type {string} */
 export const RULE_ACCOUNTING_METAPHOR =
   "不把“记账”“算账”“账目”“这笔账”等账簿词汇用作抽象比喻（情绪、恩怨、因果的“账”）；真实的记账动作与真实存在的账簿不受此限，要表达亏欠与清算就写具体的事和行为。";
+
+/** @type {string} */
+export const RULE_GRATUITOUS_METAPHOR =
+  "不滥用比喻：比喻的职责是把抽象、难描述的东西比作具象、好理解的东西；本身就好理解、好描述的事物或动作直接写，不画蛇添足地打比方。确需用比喻解释抽象事物时，喻体必须是常见事物，不用小众冷僻的东西作比。";
 
 // ── Category 3: 增强活人感 ─────────────────────────────────────
 
@@ -131,6 +135,10 @@ export const RULE_FALSE_AGENCY_EN =
 export const RULE_BUSINESS_JARGON_EN =
   "No business jargon (\"navigate\", \"unpack\", \"lean into\", \"landscape\", \"game-changer\", \"double down\", \"deep dive\"); use plain language.";
 
+/** @type {string} */
+export const RULE_GRATUITOUS_METAPHOR_EN =
+  "No gratuitous metaphors: a metaphor's job is to render the abstract concrete, so things and actions that are already easy to picture get stated directly, without a decorative comparison; when a metaphor is genuinely needed, its vehicle must be a common, familiar thing, never an obscure one.";
+
 /**
  * Category headers + setting key → rule text, in injected order. The keys
  * mirror the `userSettings` declarations in ../PLUGIN.md.
@@ -153,6 +161,7 @@ const TABLES = Object.freeze({
         ["banFingerCliche", RULE_FINGER_CLICHE],
         ["banDegreeAdverbs", RULE_DEGREE_ADVERBS],
         ["banAccountingMetaphor", RULE_ACCOUNTING_METAPHOR],
+        ["banGratuitousMetaphor", RULE_GRATUITOUS_METAPHOR],
       ]),
     },
     {
@@ -181,6 +190,7 @@ const TABLES = Object.freeze({
         ["banVagueDeclaratives", RULE_VAGUE_DECLARATIVES_EN],
         ["banFalseAgency", RULE_FALSE_AGENCY_EN],
         ["banBusinessJargon", RULE_BUSINESS_JARGON_EN],
+        ["banGratuitousMetaphor", RULE_GRATUITOUS_METAPHOR_EN],
       ]),
     },
   ]),

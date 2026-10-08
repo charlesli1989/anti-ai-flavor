@@ -1,11 +1,12 @@
 ---
 id: anti-ai-flavor
 kind: plugin
-version: 0.2.0
+version: 0.4.0
 covel: ">=0.0.46"
 displayName: Anti-AI-Flavor
 description: >-
-  Injects three groups of prose-style constraints into story prompts (avoid
+  Injects three groups of prose-style constraints into every runtime's
+  prompt — story, world-init, memory extraction, and the rest — (avoid
   expository phrasing, avoid AI-frequent clichés, add human liveliness) to
   strip the "AI accent". Prevention-only — never inspects generated output.
 tags:
@@ -69,6 +70,15 @@ contributes:
         No ledger/bookkeeping vocabulary ("settling the score") as an abstract
         metaphor for feelings, grudges, or causality; actual bookkeeping acts
         and physical ledgers are exempt. Chinese sessions only.
+    - key: banGratuitousMetaphor
+      type: toggle
+      default: true
+      label: Ban gratuitous metaphors
+      description: >-
+        No metaphors for things already concrete and easy to describe — a
+        metaphor's job is to render the abstract concrete. When one is
+        genuinely needed, its vehicle must be common and familiar, never
+        obscure.
     - key: banFlatVoice
       type: toggle
       default: true
@@ -146,7 +156,7 @@ entirely in the `PostContextAssembly` hook registered by its server entry
 
 | Hook                  | Role                                                                                                                                                                                                                                                                          |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PostContextAssembly` | Once a runtime's context is assembled (after `buildContext`, before the agent loop), appends the enabled style rules to the **story** runtime's system prompt only. Story is identified by `payload.outputKind === "story"`, never by a hardcoded plugin id (isolation rule). |
+| `PostContextAssembly` | Once a runtime's context is assembled (after `buildContext`, before the agent loop), appends the enabled style rules as a **trailing system message** in **every** runtime's message list — story, world-init, and any other agent runtime. The tail placement puts the rules behind turn-volatile segments (memory blocks, runtime inputs) and the player input: the last instruction the model reads before generating. The system prompt is left untouched for prefix caching. Never branches on a plugin id (isolation rule); the only gate is the session locale. Function runtimes that hand-build prompts and call the gateway directly (e.g. memory extraction) assemble no context, so no hook can reach them. |
 
 The injected text (`hooks/_style-rules.js`) ships **two rule tables** picked
 by `payload.locale`: zh sessions (the default zh locale and its aliases
@@ -187,6 +197,7 @@ a category whose rules are all disabled disappears with its header.
 | `banFingerCliche`                | No "指节泛白"-style finger clichés; tension and strain move to other body details.                                                                                      |
 | `banDegreeAdverbs`               | Cut hedging degree adverbs ("一丝 / 一抹 / 微微 / 淡淡 / 难以察觉的 / 极其"), never stacked back-to-back; write the concrete degree, form, or action instead.          |
 | `banAccountingMetaphor`          | No "记账 / 算账 / 账目 / 这笔账" ledger vocabulary as abstract metaphors for feelings, grudges, or causality — actual bookkeeping acts and physical ledgers are exempt. |
+| `banGratuitousMetaphor`          | No metaphors for things already concrete and easy to describe; a metaphor's job is to render the abstract concrete, and its vehicle must be common and familiar, never obscure. |
 
 ### 3. 增强活人感 (human liveliness)
 
@@ -198,8 +209,9 @@ a category whose rules are all disabled disappears with its header.
 
 ### English table (en sessions)
 
-The English table reuses `banCorrectiveNegation`, `banEmDash`, and
-`banDegreeAdverbs` with English rule text, and adds five en-only rules:
+The English table reuses `banCorrectiveNegation`, `banEmDash`,
+`banDegreeAdverbs`, and `banGratuitousMetaphor` with English rule text, and
+adds five en-only rules:
 
 | Setting (`contributes.settings`) | Rule (default ON)                                                                                                              |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
@@ -211,8 +223,8 @@ The English table reuses `banCorrectiveNegation`, `banEmDash`, and
 
 ## Scope & isolation
 
-This hook is a pure **rewrite**: it only appends to the assembled system
-prompt it is handed. It never touches the store, never emits proposals, and
+This hook is a pure **rewrite**: it only appends one message to the assembled
+context it is handed. It never touches the store, never emits proposals, and
 never calls the LLM. Enabling anti-ai-flavor for a session scopes the hook to
 that session only (framework hook scoping). It is disabled by default — add
 `anti-ai-flavor` to a world's plugin set or enable it per session to activate.

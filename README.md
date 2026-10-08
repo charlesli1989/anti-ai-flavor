@@ -4,7 +4,7 @@
 **English** · [简体中文](README.zh-CN.md)
 <!-- languages:end -->
 
-A [Covel](https://github.com/ackness/covel) community plugin that strips the LLM "AI accent" from narrative prose. It injects per-locale style rules into the story runtime's system prompt — a zh table (expository phrasing, AI clichés, liveliness) and an en table (formulaic structures, AI-frequent clichés) — selected by session locale. Prevention-only: generated output is never inspected or rewritten.
+A [Covel](https://github.com/ackness/covel) community plugin that strips the LLM "AI accent" from narrative prose. It injects per-locale style rules as a trailing system message of every agent runtime — story, world-init, extractors, and the rest — so the rules are the last instruction the model reads (behind memory blocks and the player input). A zh table (expository phrasing, AI clichés, liveliness) and an en table (formulaic structures, AI-frequent clichés), selected by session locale. Prevention-only: generated output is never inspected or rewritten. Function runtimes that call the model gateway directly (memory extraction) assemble no context and are out of hook reach.
 
 ## Installation
 
@@ -24,13 +24,13 @@ Every rule has its own toggle under Settings → Plugins → anti-ai-flavor (15 
 
 - **Data:** reads nothing and writes nothing. No plugin-data, no store access.
 - **Network:** makes no network requests.
-- **Model cost:** makes no LLM calls of its own; it only appends a short rules block (~1 KB) to the story runtime's existing system prompt once per turn.
+- **Model cost:** makes no LLM calls of its own; it only appends a short rules message (~1 KB) to each runtime's assembled context.
 
 ## Runtime layout
 
 - `PLUGIN.md` — manifest and the 15 `userSettings` toggle declarations.
 - `server/index.js` — entry registering the `PostContextAssembly` hook.
-- `hooks/inject-style-rules.js` — hook implementation; routes on `payload.locale` (zh/en) and only rewrites runtimes with `outputKind === "story"`.
+- `hooks/inject-style-rules.js` — hook implementation; routes on `payload.locale` (zh/en) and appends the rules message to every assembled context.
 - `hooks/_style-rules.js` — the zh/en rule tables and block assembly; plain frozen text, no runtime state.
 
 ## Known limitations
