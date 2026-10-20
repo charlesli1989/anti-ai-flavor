@@ -1,7 +1,7 @@
 ---
 id: anti-ai-flavor
 kind: plugin
-version: 0.4.0
+version: 0.4.1
 covel: ">=0.0.46"
 displayName: Anti-AI-Flavor
 description: >-
