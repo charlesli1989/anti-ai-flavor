@@ -232,6 +232,14 @@ describe("anti-ai-flavor / inject-style-rules (PostContextAssembly)", () => {
     ]);
   });
 
+  it("reads the locale from the hook context (current framework)", async () => {
+    const r = await injectStyleRules(
+      { ...ctxWith({}), locale: "zh-CN" },
+      { systemPrompt: "BASE", messages: HISTORY },
+    );
+    expect(tail(r)).toEqual({ role: "system", content: FULL_BLOCK });
+  });
+
   it("lands after memory blocks and the player input (tail of messages)", async () => {
     const r = await injectStyleRules(ctxWith({}), {
       systemPrompt: "BASE",

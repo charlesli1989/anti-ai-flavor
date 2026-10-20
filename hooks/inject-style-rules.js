@@ -53,12 +53,14 @@ function styleLanguage(locale) {
  * hook scope, where the optional call degrades to the manifest defaults
  * (every rule ON).
  *
- * @param {{ sessionId: string, getOwnSettings?: () => Record<string, unknown> }} ctx
+ * @param {{ sessionId: string, locale?: string, getOwnSettings?: () => Record<string, unknown> }} ctx
  * @param {{ locale?: string, messages?: { role: string, content: unknown }[] }} payload
  * @returns {Promise<{ action: "continue", replace?: { messages: { role: string, content: string }[] } }>}
  */
 export default async function injectStyleRules(ctx, payload) {
-  const lang = styleLanguage(payload?.locale);
+  // The session locale lives on the hook context since the hook-identity
+  // rework; payload.locale is the pre-rework location, kept as a fallback.
+  const lang = styleLanguage(ctx?.locale ?? payload?.locale);
   if (!lang) return { action: "continue" };
   const rulesText = buildStyleRulesText(ctx?.getOwnSettings?.(), lang);
   if (!rulesText) return { action: "continue" };
